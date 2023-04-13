@@ -10,13 +10,21 @@ namespace OnlineStore.WebApi.IntegrationTests;
 public class AccountEndpointsTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly CustomWebApplicationFactory _factory;
-    private readonly Faker _faker = new("ru");
+    private readonly Faker<RegisterRequest> _accountRequestFaker = GetRegisterRequestFaker();
 
     public AccountEndpointsTests(CustomWebApplicationFactory factory)
     {
         _factory = factory;
     }
     
+    private static Faker<RegisterRequest> GetRegisterRequestFaker()
+    {
+        return new Faker<RegisterRequest>("ru")
+            .RuleFor(x => x.Name, f => f.Name.FullName())
+            .RuleFor(x => x.Email, f => f.Internet.Email())
+            .RuleFor(x => x.Password, f => f.Internet.Password(8));
+    }
+
     /// <summary>
     /// Тест регистрации пользователя в случае если пользователь с таким email уже существует
     /// </summary>
@@ -25,12 +33,7 @@ public class AccountEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     {
         HttpClient httpClient = _factory.CreateClient();
         var client = new ShopClient(httpClient: httpClient);
-        var registerRequest = new RegisterRequest()
-        {
-            Email = _faker.Person.Email, 
-            Name = _faker.Person.FullName, 
-            Password = _faker.Internet.Password()
-        };
+        var registerRequest = _accountRequestFaker.Generate();
         RegisterResponse registerResponse = await client.Register(registerRequest);
         registerResponse.Email.Should().Be(registerRequest.Email);
         registerResponse.AccountId.Should().NotBeEmpty();
@@ -45,12 +48,7 @@ public class AccountEndpointsTests : IClassFixture<CustomWebApplicationFactory>
         // Arrange
         HttpClient httpClient = _factory.CreateClient();
         var client = new ShopClient(httpClient: httpClient);
-        var registerRequest = new RegisterRequest()
-        {
-            Email = _faker.Person.Email, 
-            Name = _faker.Person.FullName, 
-            Password = _faker.Internet.Password()
-        };
+        var registerRequest = _accountRequestFaker.Generate();
         // Pre-Act (Первая попытка регистрации пользователя)
         await client.Register(registerRequest);
         
@@ -69,12 +67,7 @@ public class AccountEndpointsTests : IClassFixture<CustomWebApplicationFactory>
         // Arrange
         HttpClient httpClient = _factory.CreateClient();
         var client = new ShopClient(httpClient: httpClient);
-        var registerRequest = new RegisterRequest()
-        {
-            Email = _faker.Person.Email, 
-            Name = _faker.Person.FullName, 
-            Password = _faker.Internet.Password()
-        };
+        var registerRequest = _accountRequestFaker.Generate();
         // Pre-Act
         await client.Register(registerRequest);
         
