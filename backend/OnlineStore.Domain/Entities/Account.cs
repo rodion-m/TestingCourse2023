@@ -1,6 +1,6 @@
 ﻿namespace OnlineStore.Domain.Entities;
 
-public record Account : IEntity
+public class Account : IEntity
 {
     public Guid Id { get; init; }
     public string Name { get; set; }

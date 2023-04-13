@@ -17,6 +17,7 @@ public record Product : IEntity
 
     public Product(Guid id, string name, decimal price, string image,string description, Guid categoryId)
     {
+        if (price <= 0) throw new ArgumentOutOfRangeException(nameof(price));
         Name = name ?? throw new ArgumentNullException(nameof(name));
         Price = price;
         Id = id;

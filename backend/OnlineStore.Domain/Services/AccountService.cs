@@ -19,23 +19,16 @@ public class AccountService
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
     }
 
-    public virtual async Task<(Account account, string token)> Register(string name, string email, string password,
+    public virtual async Task<Account> Register(
+        string name,
+        string email,
+        string password,
         CancellationToken cancellationToken)
     {
-        if (name == null)
-        {
-            throw new ArgumentNullException(nameof(name));
-        }
-
-        if (email == null)
-        {
-            throw new ArgumentNullException(nameof(email));
-        }
-
-        if (password == null)
-        {
-            throw new ArgumentNullException(nameof(password));
-        }
+        ArgumentException.ThrowIfNullOrEmpty(name);
+        ArgumentException.ThrowIfNullOrEmpty(email);
+        if (string.IsNullOrWhiteSpace(password))
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(password));
 
         var existedAccount = await _unitOfWork.AccountRepository.FindByEmail(email, cancellationToken);
         var emailRegistered = existedAccount is not null;
@@ -50,11 +43,12 @@ public class AccountService
         await _unitOfWork.AccountRepository.Add(account, cancellationToken);
         await _unitOfWork.CartRepository.Add(cart, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        var token = _tokenService.GenerateToken(account);
-        return (account, token);
+        return account;
     }
 
-    public virtual async Task<(Account account, string token)> Authentication(string email, string password,
+    public virtual async Task<(Account account, string token)> Authentication(
+        string email,
+        string password,
         CancellationToken cancellationToken)
     {
         if (email == null)
@@ -82,9 +76,9 @@ public class AccountService
         return (account, token);
     }
 
-    public async Task<Account> GetAccount(Guid accountId, CancellationToken cancellationToken) =>
-        await _unitOfWork.AccountRepository.GetById(accountId, cancellationToken);
+    public Task<Account> GetAccount(Guid accountId, CancellationToken cancellationToken) =>
+        _unitOfWork.AccountRepository.GetById(accountId, cancellationToken);
 
-    public async Task<IReadOnlyCollection<Account>> GetAll(CancellationToken cancellationToken) =>
-        await _unitOfWork.AccountRepository.GetAll(cancellationToken);
+    public Task<IReadOnlyList<Account>> GetAll(CancellationToken cancellationToken) =>
+        _unitOfWork.AccountRepository.GetAll(cancellationToken);
 }
